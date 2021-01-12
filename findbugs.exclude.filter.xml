@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+	<Match>
+		<Package name="~com\.stevenprogramming\.library\.core\.ignore\..*" />
+	</Match>
+	<Match>
+		<Class name="com.stevenprogramming.library.core.io.Test8" />
+		<Method name="main" />
+		<Bug pattern="DLS_DEAD_LOCAL_STORE" />
+	</Match>
+	<Match>
+		<package name="com.stevenprogramming.library.core.gson" />
+		<Or>
+			<Class name="com.stevenprogramming.library.core.gson.TestGson" />
+		</Or>
+		<Method name="main" />
+		<Bug pattern="DLS_DEAD_LOCAL_STORE" />
+	</Match>
+	<Match>
+		<package
+			name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.part2" />
+		<Or>
+			<Class
+				name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.part2.OrderXCoordinate" />
+		</Or>
+		<Bug pattern="URF_UNREAD_FIELD" />
+	</Match>
+	<Match>
+		<package
+			name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.part2.example2" />
+		<Or>
+			<Class
+				name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.part2.example2.Example2Comparator" />
+		</Or>
+		<Bug pattern="URF_UNREAD_FIELD" />
+	</Match>
+	<Match>
+		<package name="com.stevenprogramming.library.core.io" />
+		<Or>
+			<Class name="com.stevenprogramming.library.core.io.Test7" />
+			<Class name="com.stevenprogramming.library.core.io.Test6" />
+			<Class name="com.stevenprogramming.library.core.io.Test5" />
+			<Class name="com.stevenprogramming.library.core.io.Test4" />
+			<Class name="com.stevenprogramming.library.core.io.Test3" />
+			<Class name="com.stevenprogramming.library.core.io.Test2" />
+			<Class name="com.stevenprogramming.library.core.io.Test1" />
+			<Class name="com.stevenprogramming.library.core.io.Test11" />
+			<Class name="com.stevenprogramming.library.core.io.Test10" />
+			<Class name="com.stevenprogramming.library.core.io.Test9" />
+		</Or>
+		<Method name="main" />
+		<Bug pattern="DLS_DEAD_LOCAL_STORE" />
+	</Match>
+	<Match>
+		<package
+			name="com.stevenprogramming.library.core.lambda.book.mastering.ch1" />
+		<Or>
+			<Class
+				name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.LambdaStreams" />
+		</Or>
+		<Or>
+			<Method name="demoStream" />
+			<Method name="paralellStream" />
+		</Or>
+		<Bug pattern="DLS_DEAD_LOCAL_STORE" />
+	</Match>
+	<Match>
+		<package
+			name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.part2.example2" />
+		<Or>
+			<Class name="com.stevenprogramming.library.core.gson.TestGson" />
+		</Or>
+		<Method name="main" />
+		<Bug pattern="DLS_DEAD_LOCAL_STORE" />
+	</Match>
+	<Match>
+		<package
+			name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.part2.stevenimpl" />
+		<Or>
+			<Class
+				name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.part2.stevenimpl.Application" />
+		</Or>
+		<Method name="main" />
+		<Bug pattern="DLS_DEAD_LOCAL_STORE" />
+	</Match>
+	<Match>
+		<package
+			name="com.stevenprogramming.library.core.lambda.book.mastering.ch1" />
+		<Or>
+			<Class
+				name="com.stevenprogramming.library.core.lambda.book.mastering.ch1.LambdaPointList" />
+		</Or>
+		<Method name="demoArrayListLambda" />
+		<Bug pattern="UC_USELESS_OBJECT" />
+	</Match>
+</FindBugsFilter>
