@@ -2,7 +2,7 @@ package com.challenge.portfolio.controller;
 
 import com.challenge.portfolio.config.BaseTest;
 import com.challenge.portfolio.service.PortfolioAdvisorService;
-import com.challenge.portfolio.vo.AdvisorObject;
+import com.challenge.portfolio.service.Transaction;
 import com.challenge.portfolio.vo.RecommendedChange;
 import com.challenge.portfolio.vo.RequestAdvisor;
 import org.junit.Assert;
@@ -13,6 +13,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Map;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 class PortfolioAdvisorControllerTest extends BaseTest {
@@ -21,8 +23,38 @@ class PortfolioAdvisorControllerTest extends BaseTest {
     PortfolioAdvisorService portfolioAdvisorService;
 
     @Test
+    public void getRecommendation() throws Exception {
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
+                .get("/getRecommendationRisk/").param("risk", "2")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andDo(print());
+        MvcResult result = resultActions.andReturn();
+        String contentAsString = result.getResponse().getContentAsString();
+
+        double[] advisorObjectResponse = objectMapper.readValue(contentAsString, double[].class);
+        double[] advisorObjectExpected = new double[]{0.70, 0.15, 0.15, 0, 0, 0};
+        validateAmounts(advisorObjectExpected, advisorObjectResponse);
+    }
+
+    @Test
+    public void getRecommendationRiskNotFoundException() throws Exception {
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
+                .get("/getRecommendationRisk/").param("risk", "20")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+                .andDo(print());
+        MvcResult result = resultActions.andReturn();
+        String contentAsString = result.getResponse().getContentAsString();
+
+        Map advisorObjectResponse = objectMapper.readValue(contentAsString, Map.class);
+        Assert.assertEquals(true, "Risk Not Found".equals(advisorObjectResponse.get("message")));
+    }
+
+
+    @Test
     public void getRecommendationChange() throws Exception {
-        RequestAdvisor requestAdvisor = getRequestAdvisor(new double[]{2, 100, 250, 30, 20, 10});
+        RequestAdvisor requestAdvisor = getRequestAdvisor(2, new double[]{ 100, 250, 30, 20, 10});
         String jsonBody = objectMapper.writeValueAsString(requestAdvisor);
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
                 .post("/getSuggestionAllocation/")
@@ -31,39 +63,42 @@ class PortfolioAdvisorControllerTest extends BaseTest {
                 .content(jsonBody))
                 .andDo(print());
         MvcResult result = resultActions.andReturn();
-        RecommendedChange recommendedChangeExpected = getRecommendedChanged();
+        double[] expectedAmounts = new double[]{287.0, 61.5,61.5,0.0,0.0};
         String contentAsString = result.getResponse().getContentAsString();
         RecommendedChange recommendedChange = objectMapper.readValue(contentAsString, RecommendedChange.class);
-        Assert.assertEquals(true, recommendedChangeExpected.getAdvisorObject().equals(recommendedChange.getAdvisorObject()));
+        validateAmounts(expectedAmounts, recommendedChange.getAdvisorAmounts());
     }
 
-    private AdvisorObject getAdvisorObject(double[] values) {
-        AdvisorObject requestAdvisor = new AdvisorObject();
-        requestAdvisor.setCategoryOne(values[0]);
-        requestAdvisor.setCategoryTwo(values[1]);
-        requestAdvisor.setCategoryThree(values[2]);
-        requestAdvisor.setCategoryFour(values[3]);
-        requestAdvisor.setCategoryFive(values[4]);
-        return requestAdvisor;
+    @Test
+    public void getRecommendationChangeInvalidAmountsException() throws Exception {
+        RequestAdvisor requestAdvisor = getRequestAdvisor(2, new double[]{ 0, 0, 0, 0, 0});
+        String jsonBody = objectMapper.writeValueAsString(requestAdvisor);
+        ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
+                .post("/getSuggestionAllocation/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(jsonBody))
+                .andDo(print());
+        MvcResult result = resultActions.andReturn();
+        String contentAsString = result.getResponse().getContentAsString();
+
+        Map advisorObjectResponse = objectMapper.readValue(contentAsString, Map.class);
+        Assert.assertEquals(true, "Not valid Amounts".equals(advisorObjectResponse.get("message")));
     }
 
-    private RequestAdvisor getRequestAdvisor(double[] values) {
+    private RequestAdvisor getRequestAdvisor(int risk, double[] values) {
         RequestAdvisor requestAdvisor = new RequestAdvisor();
-        requestAdvisor.setCurrentRisk((int) values[0]);
-        requestAdvisor.setCategoryOne(values[1]);
-        requestAdvisor.setCategoryTwo(values[2]);
-        requestAdvisor.setCategoryThree(values[3]);
-        requestAdvisor.setCategoryFour(values[4]);
-        requestAdvisor.setCategoryFive(values[5]);
+        requestAdvisor.setCurrentRisk(risk);
+        requestAdvisor.setPorfolioAmounts(values);
         return requestAdvisor;
     }
 
-    private RecommendedChange getRecommendedChanged() throws Exception {
-        String contentExpected = "{\"transactionList\":[{\"from\":1,\"to\":0,\"amount\":187.0}," +
-                "{\"from\":1,\"to\":2,\"amount\":1.5},{\"from\":3,\"to\":2,\"amount\":20.0}," +
-                "{\"from\":4,\"to\":2,\"amount\":10.0}],\"advisorObject\":" +
-                "{\"categoryOne\":287.0,\"categoryTwo\":61.5,\"categoryThree\":61.5,\"categoryFour\":0.0,\"categoryFive\":0.0}}";
-        return objectMapper.readValue(contentExpected, RecommendedChange.class);
+    private void validateAmounts(double[] advisorObjectExpected, double[] advisorObjectResponse){
+        Assert.assertEquals(0, Double.compare(advisorObjectExpected[0], advisorObjectResponse[0]));
+        Assert.assertEquals(0, Double.compare(advisorObjectExpected[1], advisorObjectResponse[1]));
+        Assert.assertEquals(0, Double.compare(advisorObjectExpected[2], advisorObjectResponse[2]));
+        Assert.assertEquals(0, Double.compare(advisorObjectExpected[3], advisorObjectResponse[3]));
+        Assert.assertEquals(0, Double.compare(advisorObjectExpected[4], advisorObjectResponse[4]));
     }
 
 }

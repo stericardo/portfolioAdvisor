@@ -1,12 +1,11 @@
 package com.challenge.portfolio.service.impl;
 
+import com.challenge.portfolio.exceptions.RiskNotFoundException;
 import com.challenge.portfolio.provider.PortfolioProvider;
 import com.challenge.portfolio.service.PortfolioAdvisorService;
 import com.challenge.portfolio.service.Transaction;
-import com.challenge.portfolio.vo.AdvisorObject;
 import com.challenge.portfolio.vo.RecommendedChange;
 import com.challenge.portfolio.vo.RequestAdvisor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,75 +26,46 @@ public class PortfolioAdvisorServiceImpl implements PortfolioAdvisorService {
      * @return AdvisorObject based on risk
      */
     @Override
-    public AdvisorObject getAdvisorObject(int risk){
-        Integer[] portfolioArray = portfolioProvider.getRisk(risk);
+    public double[] getAdvisorObject(int risk){
+        double[] portfolioArray = portfolioProvider.getRisk(risk);
 
         if(portfolioArray.length == 0){
-            return new AdvisorObject();
+            throw new RiskNotFoundException("PortfolioAdvisorService - Risk requested = " + risk);
         }
-        AdvisorObject advisorObject = new AdvisorObject();
-        advisorObject.setCategoryOne(portfolioArray[0]);
-        advisorObject.setCategoryTwo(portfolioArray[1]);
-        advisorObject.setCategoryThree(portfolioArray[2]);
-        advisorObject.setCategoryFour(portfolioArray[3]);
-        advisorObject.setCategoryFive(portfolioArray[4]);
-        return advisorObject;
+        return portfolioArray;
     }
 
     @Override
     public RecommendedChange getSuggestionAllocation(final RequestAdvisor requestAdvisor){
-        Integer[] portfolioArray = portfolioProvider.getRisk(requestAdvisor.getCurrentRisk());
+        double[] portfolioArray = portfolioProvider.getRisk(requestAdvisor.getCurrentRisk());
 
-        if(portfolioArray.length == 0 || !isValidData(requestAdvisor) ){
-            return new RecommendedChange();
+        if( portfolioArray.length == 0 ){
+            throw new RiskNotFoundException("PortfolioAdvisorService - Client Risk = " + requestAdvisor.getCurrentRisk());
         }
         double[] ideal = getIdealAmount(requestAdvisor, portfolioArray);
-        List<Transaction> transactionsNeeded = getPortfolioRelocations(getPortfolioAmounts(requestAdvisor), ideal);
+        List<Transaction> transactionsNeeded = getPortfolioRelocations(requestAdvisor.getPorfolioAmounts(), ideal);
         return getRecommendedChange(transactionsNeeded, ideal);
     }
 
     protected RecommendedChange getRecommendedChange(List<Transaction> transactionsNeeded, double[] ideal ){
-        AdvisorObject advisorObject = new AdvisorObject();
-        advisorObject.setCategoryOne(ideal[0]);
-        advisorObject.setCategoryTwo(ideal[1]);
-        advisorObject.setCategoryThree(ideal[2]);
-        advisorObject.setCategoryFour(ideal[3]);
-        advisorObject.setCategoryFive(ideal[4]);
+        double[] advisorAmounts = new double[5];
         RecommendedChange recommendedChange = new RecommendedChange();
         recommendedChange.setTransactionList(transactionsNeeded);
-        recommendedChange.setAdvisorObject(advisorObject);
+        recommendedChange.setAdvisorAmounts(ideal);
         return recommendedChange;
     }
 
-    protected boolean isValidData(final RequestAdvisor requestAdvisor){
-        return requestAdvisor.getCategoryOne() <=0 &&
-        requestAdvisor.getCategoryTwo() <=0 &&
-        requestAdvisor.getCategoryThree() <=0 &&
-        requestAdvisor.getCategoryFour() <=0 &&
-        requestAdvisor.getCategoryFive() <=0 ? false : true;
-    }
+    protected final double[] getIdealAmount(final RequestAdvisor requestAdvisor, final double[] portfolioArray){
+        double totalBudget = 0;
+        for(int idx=0; idx < requestAdvisor.getPorfolioAmounts().length; idx++){
+            totalBudget += requestAdvisor.getPorfolioAmounts()[idx];
+        }
 
-    protected final double[] getIdealAmount(final RequestAdvisor requestAdvisor, final Integer[] portfolioArray){
-        double totalBudget = requestAdvisor.getCategoryOne() +
-                requestAdvisor.getCategoryTwo() +
-                requestAdvisor.getCategoryThree() +
-                requestAdvisor.getCategoryFour() +
-                requestAdvisor.getCategoryFive();
         double[] ideal = new double[5];
         for(int idx=0; idx < 5; idx++) {
-            ideal[idx] = totalBudget * portfolioArray[idx] / 100;
+            ideal[idx] = totalBudget * portfolioArray[idx] ;
         }
         return ideal;
-    }
-
-    protected final double[] getPortfolioAmounts(final RequestAdvisor requestAdvisor){
-        double[] doubles = new double[5];
-        doubles[0] = requestAdvisor.getCategoryOne();
-        doubles[1] = requestAdvisor.getCategoryTwo();
-        doubles[2] = requestAdvisor.getCategoryThree();
-        doubles[3] = requestAdvisor.getCategoryFour();
-        doubles[4] = requestAdvisor.getCategoryFive();
-        return doubles;
     }
 
     public List<Transaction> getPortfolioRelocations(double[] portfolioAmounts, double[] idealAmounts) {

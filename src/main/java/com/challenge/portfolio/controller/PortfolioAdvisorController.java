@@ -1,7 +1,8 @@
 package com.challenge.portfolio.controller;
 
+import com.challenge.portfolio.exceptions.InvalidAmountsException;
+import com.challenge.portfolio.exceptions.RiskNotFoundException;
 import com.challenge.portfolio.service.PortfolioAdvisorService;
-import com.challenge.portfolio.vo.AdvisorObject;
 import com.challenge.portfolio.vo.RecommendedChange;
 import com.challenge.portfolio.vo.RequestAdvisor;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +30,7 @@ public class PortfolioAdvisorController {
                     @ApiResponse(responseCode = "200", description = "Success",
                             content = {@Content(mediaType = "application/json")})
             })
-    public ResponseEntity<AdvisorObject> getRecommendation(int risk) {
+    public ResponseEntity<double[]> getRecommendation(int risk) {
         return new ResponseEntity<>(portfolioAdvisorService.getAdvisorObject(risk), HttpStatus.OK);
     }
 
@@ -45,7 +46,22 @@ public class PortfolioAdvisorController {
                             content = {@Content(mediaType = "application/json")})
             })
     public ResponseEntity<RecommendedChange> getRecommendationChange(@RequestBody RequestAdvisor requestAdvisor) {
-        return new ResponseEntity<>(portfolioAdvisorService.getSuggestionAllocation(requestAdvisor), HttpStatus.OK);
+        if(isValidData(requestAdvisor)) {
+            return new ResponseEntity<>(portfolioAdvisorService.getSuggestionAllocation(requestAdvisor), HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    protected boolean isValidData(final RequestAdvisor requestAdvisor){
+        if( requestAdvisor.getPorfolioAmounts()[0] <=0 &&
+                requestAdvisor.getPorfolioAmounts()[1] <=0 &&
+                requestAdvisor.getPorfolioAmounts()[2] <=0 &&
+                requestAdvisor.getPorfolioAmounts()[3] <=0 &&
+                requestAdvisor.getPorfolioAmounts()[4] <=0 ){
+            throw new InvalidAmountsException("Controller - Portfolio risk= " + requestAdvisor.getCurrentRisk());
+        }
+        return true;
     }
 
 }

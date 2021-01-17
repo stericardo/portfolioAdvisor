@@ -7,7 +7,7 @@ import java.util.List;
 public class RecommendedChange {
 
     private List<Transaction> transactionList;
-    private AdvisorObject advisorObject;
+    private double[] advisorAmounts;
 
     public List<Transaction> getTransactionList() {
         return transactionList;
@@ -17,11 +17,11 @@ public class RecommendedChange {
         this.transactionList = transactionList;
     }
 
-    public AdvisorObject getAdvisorObject() {
-        return advisorObject;
+    public double[] getAdvisorAmounts() {
+        return advisorAmounts;
     }
 
-    public void setAdvisorObject(AdvisorObject advisorObject) {
-        this.advisorObject = advisorObject;
+    public void setAdvisorAmounts(double[] advisorAmounts) {
+        this.advisorAmounts = advisorAmounts;
     }
 }
